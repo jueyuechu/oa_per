@@ -1,0 +1,86 @@
+:root {
+  /* 企业级主题色覆盖 Element Plus 默认蓝 */
+  --el-color-primary: #2563eb;
+  --el-color-primary-light-3: #6692f1;
+  --el-color-primary-light-5: #92b1f5;
+  --el-color-primary-light-7: #bed0f9;
+  --el-color-primary-light-8: #d3e0fb;
+  --el-color-primary-light-9: #e9effd;
+  --el-color-primary-dark-2: #1e4fbc;
+
+  --oa-bg: #f3f5fa;
+  --oa-text: #1f2329;
+  --oa-text-secondary: #646a73;
+  --oa-border: #e4e7ed;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  font-size: 14px;
+  color: var(--oa-text);
+  background-color: var(--oa-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--el-color-primary);
+  text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c9cdd4;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a9aeb8;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 表单统一尺寸 */
+.auth-form .el-input__wrapper {
+  padding: 4px 14px;
+  box-shadow: 0 0 0 1px var(--oa-border) inset;
+}
+
+.auth-form .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--el-color-primary) inset;
+}
+
+.auth-form .el-input__inner {
+  height: 40px;
+  line-height: 40px;
+}
+
+.auth-form .el-input__prefix .el-icon {
+  font-size: 16px;
+  color: #8f959e;
+  margin-right: 2px;
+}
+
+.auth-form .el-button {
+  height: 42px;
+  font-size: 15px;
+  letter-spacing: 2px;
+}

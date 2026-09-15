@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa_server.module.admin.depts.mapper.DeptSMapper">
+    <!-- 通用结果映射 -->
+    <resultMap id="DeptResultMapper" type="com.oa_server.module.admin.depts.entity.Dept">
+        <id column="id" property="id"/>
+        <result column="dept_name" property="deptName"/>
+        <result column="description" property="description"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <!-- 部门管理 - 条件 + 分页查询部门列表 -->
+    <select id="selectDeptPage" resultType="com.oa_server.module.admin.depts.vo.AdminDeptVO">
+        SELECT d.id          AS id,
+        d.dept_name   AS deptName,
+        d.description AS description,
+        d.created_at  AS createdAt,
+        d.updated_at  AS updatedAt
+        FROM `dept` d
+        WHERE d.is_deleted = 0
+        <!-- 部门名称模糊查询 -->
+        <if test="adminDeptQueryDTO.name != null and adminDeptQueryDTO.name != ''">
+            AND d.dept_name LIKE CONCAT('%', #{adminDeptQueryDTO.name}, '%')
+        </if>
+        <!-- 创建时间范围 -->
+        <if test="adminDeptQueryDTO.createdAtStart != null">
+            AND d.created_at <![CDATA[ >= ]]> #{adminDeptQueryDTO.createdAtStart}
+        </if>
+        <if test="adminDeptQueryDTO.createdAtEnd != null">
+            AND d.created_at <![CDATA[ <= ]]> #{adminDeptQueryDTO.createdAtEnd}
+        </if>
+        <!-- 更新时间范围 -->
+        <if test="adminDeptQueryDTO.updatedAtStart != null">
+            AND d.updated_at <![CDATA[ >= ]]> #{adminDeptQueryDTO.updatedAtStart}
+        </if>
+        <if test="adminDeptQueryDTO.updatedAtEnd != null">
+            AND d.updated_at <![CDATA[ <= ]]> #{adminDeptQueryDTO.updatedAtEnd}
+        </if>
+        ORDER BY d.created_at DESC
+    </select>
+
+    <!-- 根据部门名称查询部门 -->
+    <select id="selectDeptByName" resultMap="DeptResultMapper">
+        SELECT id,dept_name,description,created_at,updated_at,is_deleted
+        FROM `dept`
+        WHERE dept_name = #{deptName}
+        AND is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 部门管理 - 新增部门 -->
+    <insert id="addDept" parameterType="com.oa_server.module.admin.depts.entity.Dept">
+        INSERT INTO `dept`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deptName != null and deptName != ''">dept_name,</if>
+            <if test="description != null and description != ''">description,</if>
+            <if test="createdAt != null">created_at,</if>
+            <if test="updatedAt != null">updated_at,</if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="deptName != null and deptName != ''">#{deptName},</if>
+            <if test="description != null and description != ''">#{description},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+            <if test="updatedAt != null">#{updatedAt},</if>
+        </trim>
+    </insert>
+
+    <!-- 根据部门ID查询部门 -->
+    <select id="findByIdDept" resultMap="DeptResultMapper">
+        SELECT id,dept_name,description,created_at,updated_at,is_deleted
+        FROM `dept`
+        WHERE id = #{id}
+        AND is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 部门管理 - 更新部门信息 -->
+    <update id="editDept">
+        UPDATE `dept`
+        <set>
+            <if test="deptName != null">
+                dept_name = #{deptName},
+            </if>
+            <if test="description != null">
+                description = #{description},
+            </if>
+            <if test="updatedAt != null">
+                updated_at = #{updatedAt},
+            </if>
+        </set>
+        WHERE id = #{id}
+        AND is_deleted = 0
+    </update>
+
+    <!-- 统计指定 ID 列表中存在的有效部门数量 -->
+    <select id="countByIds" resultType="int">
+        SELECT COUNT(*)
+        FROM `dept`
+        WHERE is_deleted = 0
+        AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 批量逻辑删除部门 -->
+    <update id="batchDeleteByIds">
+        UPDATE `dept`
+        SET is_deleted = 1
+        WHERE is_deleted = 0
+          AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 查询指定部门中哪些部门下有员工 -->
+    <select id="selectDeptIdsWithEmployees" resultType="long">
+        SELECT DISTINCT e.dept_id
+        FROM `emp` e
+        WHERE e.is_deleted = 0
+          AND e.dept_id IS NOT NULL
+          AND e.dept_id IN
+        <foreach collection="deptIds" item="deptId" open="(" separator="," close=")">
+            #{deptId}
+        </foreach>
+    </select>
+
+    <!-- 查询部门名称 -->
+    <select id="selectDeptName" resultType="string">
+        SELECT dept_name FROM `dept` WHERE id = #{deptId} AND is_deleted = 0 LIMIT 1
+    </select>
+</mapper>

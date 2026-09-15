@@ -1,0 +1,88 @@
+# Spring Boot 核心配置
+spring:
+  profiles:
+    # 激活的环境（dev-开发，prod-生产）
+    active: dev
+  application:
+    # 应用名称
+    name: oa_server
+  # ============ Spring AI 2.0 配置 ============
+  ai:
+    # DeepSeek 对话模型（官方 starter）
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+      chat:
+        model: ${DEEPSEEK_MODEL:deepseek-chat}   # 或 deepseek-reasoner
+    # 阿里通义千问：复用 OpenAI 兼容协议（DashScope 兼容端点），chat + embedding 统一走这里
+    openai:
+      api-key: ${DASHSCOPE_API_KEY:}
+      base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+      chat:
+        model: ${QWEN_CHAT_MODEL:qwen-plus}      # qwen-plus / qwen-max / qwen-turbo
+      embedding:
+        model: ${QWEN_EMBEDDING_MODEL:text-embedding-v3}  # RAG 向量模型
+    # Redis 向量库（RAG）
+    # 注意：RAG 依赖 Redis Stack（含 RediSearch 模块），普通 Redis 会报 FT._LIST 错误。
+    # 默认关闭；启用时改为 type: redis，并将 Redis 换成 redis-stack（如 docker run -p 6379:6379 redis/redis-stack-server）
+    vectorstore:
+      type: none
+      redis:
+        index: oa-doc-index
+        prefix: oa-doc
+        initialize-schema: true
+    # MCP 客户端（默认关闭，接入外部工具源时开启）
+    mcp:
+      client:
+        enabled: false
+
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  # Mapper XML 文件路径
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    # 开启下划线转驼峰映射
+    map-underscore-to-camel-case: true
+    # 控制台输出 SQL 日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      # 主键自增策略
+      id-type: auto
+      # 逻辑删除字段名
+      logic-delete-field: isDeleted
+      # 删除时字段值
+      logic-delete-value: 1
+      # 未删除时字段值
+      logic-not-delete-value: 0
+
+# 服务器配置
+server:
+  # 应用端口号
+  port: 8097
+
+# MinIO 对象存储配置
+oa_server:
+  minio:
+    # MinIO 服务地址
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    # 访问密钥
+    access-key: ${MINIO_ACCESS_KEY:}
+    # 私有密钥
+    secret-key: ${MINIO_SECRET_KEY:}
+    # 存储桶名称
+    bucket: ${MINIO_BUCKET:}
+    # 访问 URL 前缀
+    url-prefix: ${MINIO_URL_PREFIX:/minio}
+
+# JWT 签名密钥
+jwt:
+  # 签名密钥
+  secret: ${JWT_SECRET:oa_server-dev-secret-key-change-in-production-must-be-256-bits}
+  # 访问令牌过期时间（毫秒）
+  access-token-expiration: 7200000      # 2小时
+  # 刷新令牌过期时间（毫秒）
+  refresh-token-expiration: 604800000   # 7天
+
+

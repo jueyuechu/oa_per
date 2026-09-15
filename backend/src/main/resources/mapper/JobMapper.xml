@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oa_server.module.admin.jobs.mapper.JobSMapper">
+    <!-- 通用结果映射 -->
+    <resultMap id="JobResultMapper" type="com.oa_server.module.admin.jobs.entity.Job">
+        <id column="id" property="id"/>
+        <result column="job_name" property="jobName"/>
+        <result column="sort" property="sort"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <select id="selectJobList" resultType="com.oa_server.module.admin.jobs.vo.AdminJobVO">
+        SELECT j.id          AS id,
+        j.job_name   AS jobName,
+        j.sort AS sort,
+        j.created_at  AS createdAt,
+        j.updated_at  AS updatedAt
+        FROM `job` j
+        WHERE j.is_deleted = 0
+        <!-- 职位名称模糊查询 -->
+        <if test="adminJobQueryDTO.jobName != null and adminJobQueryDTO.jobName != ''">
+            AND j.job_name LIKE CONCAT('%', #{adminJobQueryDTO.jobName}, '%')
+        </if>
+        <!-- 创建时间范围 -->
+        <if test="adminJobQueryDTO.createdAtStart != null">
+            AND j.created_at <![CDATA[ >= ]]> #{adminJobQueryDTO.createdAtStart}
+        </if>
+        <if test="adminJobQueryDTO.createdAtEnd != null">
+            AND j.created_at <![CDATA[ <= ]]> #{adminJobQueryDTO.createdAtEnd}
+        </if>
+        <!-- 更新时间范围 -->
+        <if test="adminJobQueryDTO.updatedAtStart != null">
+            AND j.updated_at <![CDATA[ >= ]]> #{adminJobQueryDTO.updatedAtStart}
+        </if>
+        <if test="adminJobQueryDTO.updatedAtEnd != null">
+            AND j.updated_at <![CDATA[ <= ]]> #{adminJobQueryDTO.updatedAtEnd}
+        </if>
+        ORDER BY j.sort ASC, j.updated_at ASC
+    </select>
+
+    <!-- 根据职位名称查询职位 -->
+    <select id="selectJobByName" resultMap="JobResultMapper">
+        SELECT id,job_name,sort,created_at,updated_at,is_deleted
+        FROM `job`
+        WHERE job_name = #{jobName}
+        AND is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 职位管理 - 新增职位 -->
+    <insert id="addJob" parameterType="com.oa_server.module.admin.jobs.entity.Job">
+        INSERT INTO `job`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="jobName != null and jobName != ''">job_name,</if>
+            <if test="sort != null">sort,</if>
+            <if test="createdAt != null">created_at,</if>
+            <if test="updatedAt != null">updated_at,</if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="jobName != null and jobName != ''">#{jobName},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+            <if test="updatedAt != null">#{updatedAt},</if>
+        </trim>
+    </insert>
+
+    <!-- 根据职位ID查询职位 -->
+    <select id="findByIdJob" resultMap="JobResultMapper">
+        SELECT id,job_name,sort,created_at,updated_at,is_deleted
+        FROM `job`
+        WHERE id = #{id}
+        AND is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 职位管理 - 更新职位信息 -->
+    <update id="updateJob">
+        UPDATE `job`
+        <set>
+            <if test="jobName != null">
+                job_name = #{jobName},
+            </if>
+            <if test="sort != null">
+                sort = #{sort},
+            </if>
+            <if test="updatedAt != null">
+                updated_at = #{updatedAt},
+            </if>
+        </set>
+        WHERE id = #{id}
+        AND is_deleted = 0
+    </update>
+
+    <!-- 统计指定 ID 列表中存在的有效职位数量 -->
+    <select id="countByIds" resultType="int">
+        SELECT COUNT(*) FROM `job` WHERE is_deleted = 0 AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 查询指定职位中哪些职位下有员工 -->
+    <select id="selectIdsWithEmps" resultType="long">
+        SELECT DISTINCT e.job_id
+        FROM `emp` e
+        WHERE e.is_deleted = 0
+          AND e.job_id IS NOT NULL
+          AND e.job_id IN
+        <foreach collection="jobIds" item="jobId" open="(" separator="," close=")">
+            #{jobId}
+        </foreach>
+    </select>
+
+    <!-- 批量删除职位 -->
+    <update id="batchDeleteByIds">
+        UPDATE `job`
+        SET is_deleted = 1
+        WHERE is_deleted = 0 AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 查询职位名称 -->
+    <select id="selectJobName" resultType="java.lang.String">
+        SELECT job_name FROM `job` WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+</mapper>
